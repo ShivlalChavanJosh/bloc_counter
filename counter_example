@@ -1,0 +1,99 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:bloc/bloc.dart';
+
+void main() => runApp(App());
+
+abstract class CounterEvent extends Equatable {
+  const CounterEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+class Increment extends CounterEvent {}
+
+class Decrement extends CounterEvent {}
+
+
+class CounterState extends Equatable {
+  final int counterValue;
+
+  const CounterState({required this.counterValue});
+
+  @override
+  List<Object> get props => [counterValue];
+}
+
+
+// Bloc logic class 
+class CounterBloc extends Bloc<CounterEvent, CounterState> {
+  CounterBloc() : super(const CounterState(counterValue: 0)) {
+    on<Increment>(_onIncrement);
+    on<Decrement>(_onDecrement);
+  }
+
+  void _onIncrement(Increment event, Emitter<CounterState> emit) {
+    emit(CounterState(counterValue: state.counterValue + 1));
+  }
+
+  void _onDecrement(Decrement event, Emitter<CounterState> emit) {
+    emit(CounterState(counterValue: state.counterValue - 1));
+  }
+}
+
+
+
+/// UI screen impl
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => CounterBloc(),
+      child: MaterialApp(
+        home: CounterScreen(),
+      ),
+    );
+  }
+}
+
+class CounterScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final counterBloc = BlocProvider.of<CounterBloc>(context);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Counter')),
+      body: Center(
+        child: BlocBuilder<CounterBloc, CounterState>(
+          builder: (context, state) {
+            return Text(
+              'Counter: ${state.counterValue}',
+              style: TextStyle(fontSize: 24.0),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              counterBloc.add(Increment());
+            },
+            child: Icon(Icons.add),
+          ),
+          SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () {
+              counterBloc.add(Decrement());
+            },
+            child: Icon(Icons.remove),
+          ),
+        ],
+      ),
+    );
+  }
+}
